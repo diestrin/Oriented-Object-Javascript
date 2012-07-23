@@ -1,4 +1,4 @@
-(function(){
+Import(false,function(){
 	/*PRIVATE*/ function mover(direccion , velocidad){
 		switch(direccion){
 			case "x":
@@ -42,4 +42,4 @@
 	/*PUBLIC*/ Mamifero.prototype.correr = function(direccion){
 		mover.call(direccion , 10);
 	}
-})();
+});
