@@ -30,7 +30,6 @@ Object.prototype.setConst = function(constante , valor){
 }
 
 /*
-//	EXTEND WINDOW
 //	
 //	Define la funcionalidad de Import
 //	@params:
@@ -41,53 +40,63 @@ Object.prototype.setConst = function(constante , valor){
 //		NULL				- null
 */
 
-window.listOfClases = [];
-window.listOfCallbacks = [];
+var __clases__ = [],
+	clases = [];
 
-window.Import = function(clases , callback, debug){
-	var numComplete = 0; 										//numero de clases importadas
-
-	for(clase in clases){										//por cada clase en clases
-		if(typeof clases[clase] != "string" || 					//si la clase no es un string o 
-			listOfClases.indexOf(clases[clase]) >= 0) 			//si la clases ya esta importada
-			continue; 											//continue con la siguiente clase
-
-		var filePath = "",										//nombre del archivo a llamar
-			xhr = new XMLHttpRequest(),							//crear un objeto de AJAX
-			filePath = clases[clase].replace(/\./g,"/");		//reemplazar los puntos por slashes
-		
-		if(debug){												//El modo debug, inserta los archivos en etiquetas script
-			var _script = document.createElement('script');		//Se crea el elemento script
-			listOfCallbacks.push(callback);						//Se manda el callback a una cola
-
-			_script.onload = function(){						
-				listOfClases.push(clases[clase]);				//inserte la clase a importar en la lista
-	    		numComplete++;									//sume uno a la lista de clases importadas
-
-	    		if(numComplete == clases.length){				//si la lista de cargas completas es igual al total de clases
-	    			setTimeout(listOfCallbacks.pop(),1000);		//ejecute el ultimo callback de la cola
-	    		}
-			}
-			_script.src = location.href+filePath+".js";			//Define la fuente del script
-			document.getElementsByTagName('head')[0].appendChild(_script);//Lo agrega al head
-			continue;											//continue con la siguiente clase
-		}
-
-		xhr.onreadystatechange = onComplete;					//cuando este listo el xhr llamar a onComplete
-		xhr.open('GET', location.href+filePath+".js", false);	//abrir la conexion y llamar al archivo con el metodo get
-	  	xhr.send(null);											//enviar la peticion
+window.Import = function(clases , callback){
+	
+	if(!!clases){
+		__clases__.push(new __loader__({
+			"clases": clases,
+			"callback": callback
+		}));
+	}else if(!!callback){
+		callback();
+		traceback();
 	}
 
-	function onComplete(){
-		if(this.readyState == 4) {								//cuando este en el estado 4
-	    	if(this.status == 200) {							//y el estado del archivo sea 200
-	    		eval(this.responseText);						//ejecute el script
-	    		listOfClases.push(clases[clase]);				//inserte la clase a importar en la lista
-	    		numComplete++;									//sume uno a la lista de clases importadas
+}
 
-	    		if(numComplete == clases.length)				//si la lista de cargas completas es igual al total de clases
-	    			callback();									//ejecute el callback
-	    	}
-	    }
+function traceback(){
+	var __clase__ = __clases__.pop();
+	if(!!__clase__){
+		__clase__.callback();
+		delete __clase__;
+		traceback();
 	}
 }
+
+function __loader__(params){
+	var script,
+		filePath
+		__this__ = this;
+
+	this.numOfCalls = params.clases.length;
+
+	this.classComplete = 0;
+
+	this.callback = function(){
+		//if(this.classComplete === this.numOfCalls)
+			 params.callback();
+	}
+
+	for(var clase = 0, l = params.clases.length; clase < l; clase++){
+		filePath = params.clases[clase].replace(/\./g,"/");
+
+		script = document.createElement('script');
+
+		script.clase = params.clases[clase];
+
+		script.onload = function(){
+			__this__.classComplete++;
+			clases.push(this.clase);
+			//__this__.callback();
+		}
+
+		script.src = location.href+filePath+".js";
+
+		this.head.appendChild(script);
+	}
+}
+
+__loader__.prototype.head = document.getElementsByTagName('head')[0];
